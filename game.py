@@ -1,15 +1,8 @@
 def main():
-    print("Welcome to Kingdom Conquest!")
-    print("This is a test to verify the game is working")
-    
-    while True:
-        choice = input("Choose difficulty (easy/normal/hard): ").lower()
-        if choice in ["easy", "normal", "hard"]:
-            print(f"\nYou selected: {choice}")
-            print("Game is working! 🎉")
-            break
-        else:
-            print("Invalid choice! Please try again.\n")
+    print("TEST: Pyodide is working!")
+    print("This message confirms Python is running")
+    name = input("What's your name? ")
+    print(f"Hello, {name}! Game is working.")
 
 if __name__ == "__main__":
     main()
