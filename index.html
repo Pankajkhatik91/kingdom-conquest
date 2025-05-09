@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kingdom Conquest</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 20px; }
+        #game-container { max-width: 800px; margin: 0 auto; }
+        #output { 
+            background: #111; color: #0f0; 
+            padding: 15px; height: 400px;
+            overflow-y: scroll; text-align: left;
+            font-family: monospace; border: 1px solid #333;
+        }
+        #input { 
+            width: 300px; padding: 8px;
+            margin-top: 10px; font-size: 16px;
+        }
+        button { 
+            padding: 8px 15px; margin-left: 5px;
+            background: #444; color: white; border: none;
+        }
+        #loading { color: blue; margin: 20px; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Kingdom Conquest 🏰</h1>
+        <p id="loading">Loading game environment... (this may take a minute)</p>
+        <div id="output"></div>
+        <input type="text" id="input" placeholder="Enter your choice...">
+        <button id="submit">Submit</button>
+    </div>
+
+    <script>
+        const output = document.getElementById("output");
+        const input = document.getElementById("input");
+        const submitBtn = document.getElementById("submit");
+        const loadingMsg = document.getElementById("loading");
+
+        async function main() {
+            try {
+                // Initialize Pyodide
+                loadingMsg.textContent = "Loading Python environment...";
+                let pyodide = await loadPyodide({
+                    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
+                });
+                
+                // Load micropip for potential dependencies
+                loadingMsg.textContent = "Loading dependencies...";
+                await pyodide.loadPackage("micropip");
+                
+                // Load game code
+                loadingMsg.textContent = "Loading game...";
+                let response = await fetch("game.py");
+                let code = await response.text();
+                
+                // Create input function for Python
+                function input(prompt = "") {
+                    if (prompt) {
+                        output.innerHTML += prompt;
+                    }
+                    return new Promise((resolve) => {
+                        const handleSubmit = () => {
+                            const userInput = input.value;
+                            input.value = "";
+                            submitBtn.removeEventListener("click", handleSubmit);
+                            resolve(userInput);
+                        };
+                        submitBtn.addEventListener("click", handleSubmit);
+                    });
+                }
+                
+                // Set up Python environment
+                pyodide.globals.set("input", input);
+                pyodide.globals.set("print", (...args) => {
+                    output.innerHTML += args.join(" ") + "<br>";
+                    output.scrollTop = output.scrollHeight;
+                });
+                
+                // Hide loading message and run game
+                loadingMsg.style.display = "none";
+                await pyodide.runPythonAsync(code);
+                
+            } catch (error) {
+                loadingMsg.innerHTML = `<span style="color:red">Error: ${error}</span>`;
+                console.error("Game failed to load:", error);
+            }
+        }
+        
+        // Start the game
+        main();
+    </script>
+</body>
+</html>
